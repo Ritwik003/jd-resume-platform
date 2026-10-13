@@ -1,0 +1,92 @@
+services:
+  # OPT-IN, not started by `docker compose up` on its own -- a developer who
+  # already has Postgres installed on the host (the usual case day to day)
+  # has real data sitting in it, on the same default port 5432 this container
+  # would also try to bind. Starting both is a port clash at best and two
+  # silently diverging databases at worst. Bring this up only when you
+  # deliberately want a throwaway, fully-isolated stack:
+  #     docker compose --profile local-db up --build
+  # Everything below talks to the HOST's Postgres by default instead (see
+  # DOCKER_DATABASE_URL).
+  db:
+    image: postgres:16-alpine
+    profiles: ["local-db"]
+    environment:
+      POSTGRES_USER: jdresume
+      POSTGRES_PASSWORD: jdresume
+      POSTGRES_DB: jdresume
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jdresume"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    # Not published to the host: api/worker/beat reach it over the internal
+    # compose network by service name regardless, and publishing 6379 here
+    # is a needless collision with any OTHER project's Redis already bound
+    # to that port on the same machine.
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment: &appenv
+      # host.docker.internal is how a container reaches the machine it is
+      # running on (Docker Desktop maps this on Windows/Mac automatically).
+      # Set DOCKER_DATABASE_URL in your OWN .env to your real local Postgres
+      # (same credentials/db name you already use, host swapped to
+      # host.docker.internal) -- docker compose reads that file for this
+      # substitution. Falls back to the throwaway `db` profile's DB so
+      # `docker compose --profile local-db up` still works with no .env edit.
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql+psycopg2://jdresume:jdresume@db:5432/jdresume}
+      JWT_SECRET_KEY: dev-secret-change-me
+      FILE_STORAGE_ROOT: /app/storage
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      # Point at any OpenAI-compatible endpoint. Left offline here so a fresh
+      # `docker compose up` needs no API key; set these to go live.
+      LLM_OFFLINE_MODE: "true"
+      LLM_PROVIDER: openai
+      LLM_MODEL: ${LLM_MODEL:-MiniMax-M2.7}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.minimax.io/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+
+  # Section 31 — reservation expiry and document rendering off the request thread.
+  worker:
+    build: .
+    command: ["celery", "-A", "app.celery_worker.celery_app", "worker", "--loglevel=info", "--pool=solo"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment: *appenv
+    volumes:
+      - ./storage:/app/storage
+
+  beat:
+    build: .
+    command: ["celery", "-A", "app.celery_worker.celery_app", "beat", "--loglevel=info"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment: *appenv
+
+volumes:
+  pgdata:
+  redisdata:

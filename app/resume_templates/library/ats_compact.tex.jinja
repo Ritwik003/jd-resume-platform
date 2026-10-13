@@ -1,0 +1,156 @@
+%% Compact Dense — maximum content per page. ATS-safe single column.
+\documentclass[10pt,a4paper]{article}
+%% Latin Modern, as an OpenType face so ligatures and kerning can be turned
+%% off. Both are invisible on the page and both cost keywords in the
+%% text layer an ATS reads: ff becomes one glyph, and a wide kern reads
+%% as a space. Loaded by filename because tectonic cannot find these by
+%% family name.
+\usepackage{fontspec}
+\setmainfont{lmroman10-regular.otf}[
+  BoldFont=lmroman10-bold.otf,
+  ItalicFont=lmroman10-italic.otf,
+  BoldItalicFont=lmroman10-bolditalic.otf,
+  Ligatures=NoCommon,
+  Kerning=Off]
+\usepackage[margin=1.2cm]{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\setlist[itemize]{leftmargin=1.1em,topsep=1pt,itemsep=0.5pt,parsep=0pt}
+\titleformat{\section}{\normalfont\bfseries\small\MakeUppercase}{}{0em}{}[\vspace{-0.8em}\rule{\linewidth}{0.4pt}]
+\titlespacing*{\section}{0pt}{7pt}{2pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\linespread{0.98}
+
+%% Last-resort stretch before TeX gives up and overflows the margin.
+%% A long comma-separated technology list in a wide face can leave no break
+%% point that justification accepts, and TeX's answer to that is to set the
+%% line too wide and print it past the right edge. This lets it loosen the
+%% spaces instead. It engages only where the alternative is an overfull
+%% line, so nothing that already fits is typeset any differently.
+\emergencystretch=3em
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries << contact.full_name >>}\par
+<% if contact.headline %>
+\vspace{1pt}<< contact.headline >>\par
+<% endif %>
+\vspace{2pt}\small << contact.email >><% if contact.phone %> $\vert$ << contact.phone >><% endif %><% if contact.location %> $\vert$ << contact.location >><% endif %><% for link in contact.links %> $\vert$ << link >><% endfor %>
+\end{center}
+
+<% for section in sections %>
+<% if section.kind == 'summary' and summary %>
+\section{<< section.title >>}
+<< summary >>\par
+
+<% elif section.kind == 'skills' and skills %>
+\section{<< section.title >>}
+<% for group in skills %>
+\noindent\hangindent=1.6em\hangafter=1 \textbf{<< group.label >>:} << group.joined >>\par
+<% endfor %>
+
+<% elif section.kind == 'experience' and experience %>
+\section{<< section.title >>}
+<% for job in experience %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< job.company >>}<% if job.location %>, << job.location >><% endif %>\end{minipage}\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << job.dates >>\end{minipage}\par
+<% if job.designation %>
+\noindent\textit{<< job.designation >>}\par
+<% endif %>
+<% if job.description %>
+\noindent << job.description >>\par
+<% endif %>
+<% if job.highlights %>
+\begin{itemize}
+<% for line in job.highlights %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if not projects_section_visible %>
+<% for project in job.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+<% endif %>
+\vspace{5pt}
+<% endfor %>
+<% elif section.kind == 'projects' and project_groups %>
+\section{<< section.title >>}
+<% for group in project_groups %>
+<% if group.company %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< group.company >>}\end{minipage}<% if group.dates %>\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << group.dates >>\end{minipage}<% endif %>\par
+\vspace{2pt}
+<% endif %>
+<% for project in group.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+\vspace{4pt}
+<% endfor %>
+<% elif section.kind == 'education' and education %>
+\section{<< section.title >>}
+<% for row in education %>
+\noindent\textbf{<< row.qualification >>}\hfill << row.year >>\par
+<% if row.institution %>
+\noindent << row.institution >>\par
+<% endif %>
+\vspace{2pt}
+<% endfor %>
+
+<% elif section.kind == 'certifications' and certifications %>
+\section{<< section.title >>}
+\begin{itemize}
+<% for item in certifications %>
+  \item << item >>
+<% endfor %>
+\end{itemize}
+
+<% elif section.kind == 'custom' %>
+<% for block in custom_sections %>
+<% if block.title == section.title %>
+\section{<< section.title >>}
+<% if block.body %>
+<< block.body >>\par
+<% endif %>
+<% if block.items %>
+\begin{itemize}
+<% for line in block.items %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% endif %>
+<% endfor %>
+
+<% endif %>
+<% endfor %>
+\end{document}

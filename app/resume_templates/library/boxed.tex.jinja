@@ -1,0 +1,167 @@
+%% Boxed Sections — each section in its own tinted, rounded panel.
+\documentclass[10pt,a4paper]{article}
+%% Avant Garde, as an OpenType face so ligatures and kerning can be turned
+%% off. Both are invisible on the page and both cost keywords in the
+%% text layer an ATS reads: ff becomes one glyph, and a wide kern reads
+%% as a space. Loaded by filename because tectonic cannot find these by
+%% family name.
+\usepackage{fontspec}
+\setmainfont{texgyreadventor-regular.otf}[
+  BoldFont=texgyreadventor-bold.otf,
+  ItalicFont=texgyreadventor-italic.otf,
+  BoldItalicFont=texgyreadventor-bolditalic.otf,
+  Ligatures=NoCommon,
+  Kerning=Off]
+\usepackage[margin=1.4cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage[most]{tcolorbox}
+
+\definecolor{accent}{HTML}{5B2C82}
+\definecolor{panel}{HTML}{F4F1F8}
+\definecolor{muted}{HTML}{4A4A4A}
+\setlist[itemize]{leftmargin=1em,topsep=2pt,itemsep=1pt,parsep=0pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\newtcolorbox{panelbox}[1]{%
+  enhanced, breakable, colback=panel, colframe=panel, boxrule=0pt,
+  arc=3pt, left=8pt, right=8pt, top=6pt, bottom=6pt, top=6pt,
+  before skip=7pt, after skip=0pt,
+  title={\bfseries\color{accent}\MakeUppercase{#1}},
+  fonttitle=\normalsize, coltitle=accent, colbacktitle=panel,
+  attach boxed title to top left={xshift=6pt, yshift=-2pt},
+  boxed title style={colback=panel, colframe=panel, boxrule=0pt}}
+
+%% Last-resort stretch before TeX gives up and overflows the margin.
+%% A long comma-separated technology list in a wide face can leave no break
+%% point that justification accepts, and TeX's answer to that is to set the
+%% line too wide and print it past the right edge. This lets it loosen the
+%% spaces instead. It engages only where the alternative is an overfull
+%% line, so nothing that already fits is typeset any differently.
+\emergencystretch=3em
+\begin{document}
+
+\begin{center}
+{\Huge\bfseries\color{accent} << contact.full_name >>}\par
+<% if contact.headline %>
+\vspace{2pt}{\large << contact.headline >>}\par
+<% endif %>
+\vspace{4pt}{\small\color{muted}<< contact.email >><% if contact.phone %> \textbullet\ << contact.phone >><% endif %><% if contact.location %> \textbullet\ << contact.location >><% endif %><% for link in contact.links %> \textbullet\ << link >><% endfor %>}
+\end{center}
+
+<% for section in sections %>
+<% if section.kind == 'summary' and summary %>
+\begin{panelbox}{<< section.title >>}
+<< summary >>
+\end{panelbox}
+
+<% elif section.kind == 'skills' and skills %>
+\begin{panelbox}{<< section.title >>}
+<% for group in skills %>
+\noindent\hangindent=1.6em\hangafter=1 {\bfseries << group.label >>}\ \ << group.joined >>\par\vspace{1pt}
+<% endfor %>
+\end{panelbox}
+
+<% elif section.kind == 'experience' and experience %>
+\section{<< section.title >>}
+<% for job in experience %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< job.company >>}<% if job.location %>, << job.location >><% endif %>\end{minipage}\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << job.dates >>\end{minipage}\par
+<% if job.designation %>
+\noindent\textit{<< job.designation >>}\par
+<% endif %>
+<% if job.description %>
+\noindent << job.description >>\par
+<% endif %>
+<% if job.highlights %>
+\begin{itemize}
+<% for line in job.highlights %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if not projects_section_visible %>
+<% for project in job.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+<% endif %>
+\vspace{5pt}
+<% endfor %>
+<% elif section.kind == 'projects' and project_groups %>
+\section{<< section.title >>}
+<% for group in project_groups %>
+<% if group.company %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< group.company >>}\end{minipage}<% if group.dates %>\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << group.dates >>\end{minipage}<% endif %>\par
+\vspace{2pt}
+<% endif %>
+<% for project in group.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+\vspace{4pt}
+<% endfor %>
+<% elif section.kind == 'education' and education %>
+\begin{panelbox}{<< section.title >>}
+<% for row in education %>
+{\bfseries << row.qualification >>}<% if row.institution %>, << row.institution >><% endif %>\hfill{\small\color{muted}<< row.year >>}\par
+<% endfor %>
+\end{panelbox}
+
+<% elif section.kind == 'certifications' and certifications %>
+\begin{panelbox}{<< section.title >>}
+\begin{itemize}
+<% for item in certifications %>
+  \item << item >>
+<% endfor %>
+\end{itemize}
+\end{panelbox}
+
+<% elif section.kind == 'custom' %>
+<% for block in custom_sections %>
+<% if block.title == section.title %>
+\begin{panelbox}{<< section.title >>}
+<% if block.body %>
+<< block.body >>\par
+<% endif %>
+<% if block.items %>
+\begin{itemize}
+<% for line in block.items %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+\end{panelbox}
+<% endif %>
+<% endfor %>
+
+<% endif %>
+<% endfor %>
+\end{document}

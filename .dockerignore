@@ -1,0 +1,23 @@
+# .env holds the live API key and JWT secret -- it must never end up baked
+# into an image layer. Real config for the api/worker/beat services comes from
+# docker-compose.yml's own `environment:` block instead.
+.env
+.env.*
+!.env.example
+
+.git
+.venv
+__pycache__
+*.pyc
+
+# Local-only data, never part of the image.
+data/
+storage/
+*.db
+*.sqlite3
+
+# Not needed inside the image; keeps the build context small.
+.pytest_cache
+.mypy_cache
+.ruff_cache
+node_modules

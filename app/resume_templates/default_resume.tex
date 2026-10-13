@@ -1,0 +1,50 @@
+% Bundled starter resume template.
+% Upload your own .tex to replace it — the AI reproduces the preamble exactly
+% and fills the body with the candidate's history, angled at the job description.
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=0.7in]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\definecolor{accent}{HTML}{0F5C6B}
+\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{}[\vspace{-0.6em}\rule{\linewidth}{0.8pt}]
+\titlespacing{\section}{0pt}{10pt}{6pt}
+\setlist[itemize]{leftmargin=1.2em,itemsep=1pt,topsep=2pt}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+  {\huge\bfseries FULL NAME}\\[2pt]
+  {\large\itshape Professional Title}\\[3pt]
+  {\small email@example.com \textbullet{} +00 00000 00000 \textbullet{} City}
+\end{center}
+
+\section{Profile Summary}
+Two to three sentences positioning the candidate against the role.
+
+\section{Technical Skills}
+\textbf{Category}: item, item, item\\
+\textbf{Category}: item, item
+
+\section{Professional Experience}
+\textbf{Company Name} \hfill \textit{Mon YYYY -- Mon YYYY}\\
+\textit{Job Title}
+\begin{itemize}
+  \item Achievement bullet.
+\end{itemize}
+
+\section{Key Projects}
+\textbf{Project Name} \hfill \textit{Mon YYYY -- Mon YYYY}\\
+\textit{Role \textbullet{} Client}
+\begin{itemize}
+  \item What was built and the outcome.
+\end{itemize}
+\textit{Technologies}: tech, tech
+
+\section{Education}
+Degree, Institution, Year
+
+\end{document}

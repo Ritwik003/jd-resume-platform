@@ -1,0 +1,171 @@
+%% Executive Two-Tone — dates in their own right-hand column.
+%%
+%% The two-column entry line is built from a pair of minipages rather than
+%% from tabularx: tabularx reads its own body before expanding it, so it
+%% cannot be wrapped in a \newenvironment, and a template that has to be used
+%% exactly one way is a template waiting to break.
+\documentclass[11pt,a4paper]{article}
+%% Bookman, as an OpenType face so ligatures and kerning can be turned
+%% off. Both are invisible on the page and both cost keywords in the
+%% text layer an ATS reads: ff becomes one glyph, and a wide kern reads
+%% as a space. Loaded by filename because tectonic cannot find these by
+%% family name.
+\usepackage{fontspec}
+\setmainfont{texgyrebonum-regular.otf}[
+  BoldFont=texgyrebonum-bold.otf,
+  ItalicFont=texgyrebonum-italic.otf,
+  BoldItalicFont=texgyrebonum-bolditalic.otf,
+  Ligatures=NoCommon,
+  Kerning=Off]
+\usepackage[margin=1.7cm]{geometry}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{ragged2e}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{accent}{HTML}{7B1E28}
+\definecolor{muted}{HTML}{5A5A5A}
+\setlist[itemize]{leftmargin=1em,topsep=2pt,itemsep=1.5pt,parsep=0pt}
+\titleformat{\section}{\normalfont\bfseries\normalsize\color{accent}\MakeUppercase}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{5pt}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+%% #1 fills the page; #2 sits hard right in its own column and wraps there.
+%%
+%% The \strut in each is what makes the two line up: a [t] minipage aligns on
+%% the baseline of its first line, and the two sides are set at different
+%% sizes, so without a strut of common height the dates print a line low.
+\newcommand{\entryline}[2]{%
+  \noindent\begin{minipage}[t]{0.76\linewidth}\strut\RaggedRight #1\end{minipage}%
+  \hfill%
+  \begin{minipage}[t]{0.22\linewidth}\strut\RaggedLeft {\small\color{muted} #2}\end{minipage}\par}
+
+%% Last-resort stretch before TeX gives up and overflows the margin.
+%% A long comma-separated technology list in a wide face can leave no break
+%% point that justification accepts, and TeX's answer to that is to set the
+%% line too wide and print it past the right edge. This lets it loosen the
+%% spaces instead. It engages only where the alternative is an overfull
+%% line, so nothing that already fits is typeset any differently.
+\emergencystretch=3em
+\begin{document}
+
+{\Huge\bfseries << contact.full_name >>}\par
+\vspace{1pt}{\color{accent}\rule{\linewidth}{2.5pt}}\par
+\vspace{4pt}
+<% if contact.headline %>
+{\large\itshape << contact.headline >>}\par\vspace{3pt}
+<% endif %>
+{\small\color{muted}<< contact.email >><% if contact.phone %>\ \textbar\ << contact.phone >><% endif %><% if contact.location %>\ \textbar\ << contact.location >><% endif %><% for link in contact.links %>\ \textbar\ << link >><% endfor %>}\par
+
+<% for section in sections %>
+<% if section.kind == 'summary' and summary %>
+\section{<< section.title >>}
+<< summary >>\par
+
+<% elif section.kind == 'skills' and skills %>
+\section{<< section.title >>}
+<% for group in skills %>
+\noindent\hangindent=1.6em\hangafter=1 {\bfseries << group.label >>}\quad << group.joined >>\par\vspace{2pt}
+<% endfor %>
+
+<% elif section.kind == 'experience' and experience %>
+\section{<< section.title >>}
+<% for job in experience %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< job.company >>}<% if job.location %>, << job.location >><% endif %>\end{minipage}\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << job.dates >>\end{minipage}\par
+<% if job.designation %>
+\noindent\textit{<< job.designation >>}\par
+<% endif %>
+<% if job.description %>
+\noindent << job.description >>\par
+<% endif %>
+<% if job.highlights %>
+\begin{itemize}
+<% for line in job.highlights %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if not projects_section_visible %>
+<% for project in job.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+<% endif %>
+\vspace{5pt}
+<% endfor %>
+<% elif section.kind == 'projects' and project_groups %>
+\section{<< section.title >>}
+<% for group in project_groups %>
+<% if group.company %>
+\noindent\begin{minipage}[t]{0.72\linewidth}\strut\raggedright\textbf{<< group.company >>}\end{minipage}<% if group.dates %>\hfill\begin{minipage}[t]{0.26\linewidth}\strut\raggedleft << group.dates >>\end{minipage}<% endif %>\par
+\vspace{2pt}
+<% endif %>
+<% for project in group.projects %>
+\noindent{\raggedright\textbf{<< project.name >>}\par}
+<% if project.description %>
+\noindent << project.description >>\par
+<% endif %>
+<% if project.bullets %>
+\begin{itemize}
+<% for line in project.bullets %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% if project.tech_joined %>
+\noindent\textit{<< project.tech_joined >>}\par
+<% endif %>
+\vspace{3pt}
+<% endfor %>
+\vspace{4pt}
+<% endfor %>
+<% elif section.kind == 'education' and education %>
+\section{<< section.title >>}
+<% for row in education %>
+\entryline{{\bfseries << row.qualification >>}<% if row.institution %>, << row.institution >><% endif %>}{<< row.year >>}
+\vspace{2pt}
+<% endfor %>
+
+<% elif section.kind == 'certifications' and certifications %>
+\section{<< section.title >>}
+\begin{itemize}
+<% for item in certifications %>
+  \item << item >>
+<% endfor %>
+\end{itemize}
+
+<% elif section.kind == 'custom' %>
+<% for block in custom_sections %>
+<% if block.title == section.title %>
+\section{<< section.title >>}
+<% if block.body %>
+<< block.body >>\par
+<% endif %>
+<% if block.items %>
+\begin{itemize}
+<% for line in block.items %>
+  \item << line >>
+<% endfor %>
+\end{itemize}
+<% endif %>
+<% endif %>
+<% endfor %>
+
+<% endif %>
+<% endfor %>
+\end{document}
